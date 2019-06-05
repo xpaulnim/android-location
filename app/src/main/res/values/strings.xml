@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">LocationDropper</string>
+    <string name="press_me">press mee!</string>
+    <string name="enter_text">enter text</string>
+    <string name="share_to_apps">Share!</string>
+    <string name="show_hobbies_list">Show hobbies</string>
+    <string name="title">Title</string>
+    <string name="get_location">Save message for location</string>
+    <string name="current_location">Your current location is:</string>
+</resources>
