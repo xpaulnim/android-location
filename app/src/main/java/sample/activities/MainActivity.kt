@@ -1,9 +1,9 @@
 package sample.activities
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import sample.R
 import sample.showToast
@@ -44,6 +44,10 @@ class MainActivity : AppCompatActivity() {
 
         btnGoToLocationActivity.setOnClickListener {
             startActivity(Intent(this, LocationActivity::class.java))
+        }
+
+        btnGotoUserActivity.setOnClickListener {
+            startActivity(Intent(this, UserActivity::class.java))
         }
     }
 }
