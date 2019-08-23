@@ -11,4 +11,5 @@
     <string name="start_location_recording">Start Recording location</string>
     <string name="access_token">pk.eyJ1IjoiYWxsbm90cGFpZCIsImEiOiJjanA5ejNtYmoyOG43M2tyd2RjazkxaWhyIn0.K2pr99aULLnoGn30jj16XQ</string>
     <string name="show_users">Show Users</string>
+    <string name="show_day_plan">Show day plan</string>
 </resources>

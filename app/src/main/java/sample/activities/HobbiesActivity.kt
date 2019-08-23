@@ -6,10 +6,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request
+import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import kotlinx.android.synthetic.main.activity_hobbies.*
+import sample.AppNetwork
 import sample.adapters.HobbiesAdapter
 import sample.R
 import sample.model.Supplier
@@ -19,10 +21,13 @@ class HobbiesActivity : AppCompatActivity() {
         val TAG: String  = HobbiesActivity::class.java.simpleName
     }
 
+    lateinit var queue: AppNetwork
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hobbies)
 
+        queue = AppNetwork.getInstance(this.applicationContext)
         setUpRecyclerView()
     }
 
@@ -31,8 +36,7 @@ class HobbiesActivity : AppCompatActivity() {
         layoutManager.orientation = RecyclerView.VERTICAL
         recyclerView.layoutManager = layoutManager
 
-        val queue = Volley.newRequestQueue(this)
-        val url = "http://10.0.2.2:8080/messages"
+        val url = "https://catfact.ninja/breeds?limit=1"
 
         val stringRequest = StringRequest(Request.Method.GET, url, Response.Listener<String> {
             Log.i(TAG, "the response was: $it")
@@ -40,9 +44,17 @@ class HobbiesActivity : AppCompatActivity() {
             Log.e(TAG, "That didn't work $it")
         })
 
-        queue.add(stringRequest)
+        stringRequest.tag = this
+
+        queue.addToRequestQueue(stringRequest)
 
         val adapter = HobbiesAdapter(this, Supplier.hobbies)
         recyclerView.adapter = adapter
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        queue.cancelAll(this)
     }
 }

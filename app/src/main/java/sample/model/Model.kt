@@ -27,3 +27,13 @@ object Supplier {
         Hobby("Run")
     )
 }
+
+data class CatFactsResponse(val data: Array<Cat>)
+
+class Cat(
+    country: String,
+    breed: String,
+    coat: String,
+    origin: String,
+    pattern: String
+)

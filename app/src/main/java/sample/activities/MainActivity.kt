@@ -49,5 +49,9 @@ class MainActivity : AppCompatActivity() {
         btnGotoUserActivity.setOnClickListener {
             startActivity(Intent(this, UserActivity::class.java))
         }
+
+        btnGoToDayPlan.setOnClickListener {
+            startActivity(Intent(this, DayPlanActivity::class.java))
+        }
     }
 }
