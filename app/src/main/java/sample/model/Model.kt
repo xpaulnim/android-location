@@ -28,12 +28,4 @@ object Supplier {
     )
 }
 
-data class CatFactsResponse(val data: Array<Cat>)
-
-class Cat(
-    country: String,
-    breed: String,
-    coat: String,
-    origin: String,
-    pattern: String
-)
+data class WikiPoi(val title: String, val latitude: Double, val longitude: Double)

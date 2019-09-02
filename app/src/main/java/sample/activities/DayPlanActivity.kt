@@ -2,27 +2,27 @@ package sample.activities
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
-import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import com.mapbox.mapboxsdk.maps.Style
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import kotlinx.android.synthetic.main.activity_dayplan.*
-import kotlinx.android.synthetic.main.activity_location.*
+import org.json.JSONObject
+import sample.AppNetwork
 import sample.R
-
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset
+import sample.model.WikiPoi
 
 
 class DayPlanActivity : OnMapReadyCallback, AppCompatActivity() {
@@ -34,18 +34,17 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity() {
     private val SOURCE_ID = "SOURCE_ID"
     private val LAYER_ID = "LAYER_ID"
 
-    private val coordinates = arrayOf(
-        LatLng(-34.6054099, -58.363654800000006),
-        LatLng(-34.6041508, -58.38555650000001),
-        LatLng(-34.6114412, -58.37808899999999),
-        LatLng(-34.6097604, -58.382064000000014),
-        LatLng(-34.596636, -58.373077999999964),
-        LatLng(-34.590548, -58.38256609999996),
-        LatLng(-34.5982127, -58.38110440000003)
-    )
+    private val wikiTestUrl =
+        "https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=500&gscoord=51.5144411%7C-0.2018387&format=json&gslimit=50&prop=coordinates|info"
+
+    lateinit var queue: AppNetwork
+
+    private val wikiPoiList = mutableListOf<WikiPoi>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        queue = AppNetwork.getInstance(this.applicationContext)
 
         Mapbox.getInstance(this, getString(R.string.access_token))
 
@@ -53,14 +52,43 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity() {
 
         dayPlanMapView?.onCreate(savedInstanceState)
         dayPlanMapView?.getMapAsync(this)
+
+    }
+
+    private fun getWikiPointsOfInterest() {
+        val jsonRequest = JsonObjectRequest(Request.Method.GET, wikiTestUrl, null, Response.Listener<JSONObject> {
+            Log.i(HobbiesActivity.TAG, "the response was: $it")
+
+            val data = it.getJSONObject("query").getJSONArray("geosearch")
+
+
+            for (item in 0 until data.length()-1) {
+                val title = data.getJSONObject(item).getString("title")
+                val lat = data.getJSONObject(item).getDouble("lat")
+                val lng = data.getJSONObject(item).getDouble("lon")
+
+                wikiPoiList.add(WikiPoi(title, lat, lng))
+            }
+
+            Log.i(HobbiesActivity.TAG, wikiPoiList.size.toString())
+
+            initFeatureCollection()
+            initMarkerIcons(mapboxMap!!.style!!)
+        }, Response.ErrorListener {
+            Log.e(HobbiesActivity.TAG, "That didn't work $it")
+        })
+
+        jsonRequest.tag = this
+
+        queue.addToRequestQueue(jsonRequest)
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
         this.mapboxMap = mapboxMap
         dayPlanMapView?.getMapAsync { mapboxMap ->
             mapboxMap.setStyle(Style.MAPBOX_STREETS, Style.OnStyleLoaded { style ->
-                initFeatureCollection()
-                initMarkerIcons(style)
+                getWikiPointsOfInterest()
+
                 initRecyclerView()
 
                 Toast.makeText(this, "Done initializing map", Toast.LENGTH_SHORT).show()
@@ -74,27 +102,40 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity() {
         var featureList = emptyArray<Feature>()
 
         if (featureCollection != null) {
-            for (latLng in coordinates) {
+            for (poi in wikiPoiList) {
                 featureList =
-                    featureList.plus(Feature.fromGeometry(Point.fromLngLat(latLng.longitude, latLng.latitude)))
+                    featureList.plus(
+                        Feature.fromGeometry(
+                            Point.fromLngLat(
+                                poi.longitude,
+                                poi.latitude
+                            )
+                        )
+                    )
             }
 
             featureCollection = FeatureCollection.fromFeatures(featureList)
+
+            Log.i(HobbiesActivity.TAG, "POIs should now be visible")
         }
     }
 
-    private fun initMarkerIcons(loadedMapStyle: Style) {
-        loadedMapStyle.addImage(SYMBOL_ICON_ID, BitmapFactory.decodeResource(
-            this.resources, R.drawable.red_marker
-        ))
+    private fun initMarkerIcons(style: Style) {
+        style.addImage(
+            SYMBOL_ICON_ID, BitmapFactory.decodeResource(
+                this.resources, R.drawable.red_marker
+            )
+        )
 
-        loadedMapStyle.addSource(GeoJsonSource(SOURCE_ID, featureCollection))
+        style.addSource(GeoJsonSource(SOURCE_ID, featureCollection))
 
-        loadedMapStyle.addLayer(SymbolLayer(LAYER_ID, SOURCE_ID).withProperties(
-            iconImage(SYMBOL_ICON_ID),
-            iconAllowOverlap(true),
-            iconOffset(arrayOf(0f, -4f))
-        ))
+        style.addLayer(
+            SymbolLayer(LAYER_ID, SOURCE_ID).withProperties(
+                iconImage(SYMBOL_ICON_ID),
+                iconAllowOverlap(true),
+                iconOffset(arrayOf(0f, -4f))
+            )
+        )
     }
 
     private fun initRecyclerView() {

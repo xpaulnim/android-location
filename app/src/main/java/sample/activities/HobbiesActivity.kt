@@ -6,11 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request
-import com.android.volley.RequestQueue
 import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
+import com.android.volley.toolbox.JsonObjectRequest
 import kotlinx.android.synthetic.main.activity_hobbies.*
+import org.json.JSONObject
 import sample.AppNetwork
 import sample.adapters.HobbiesAdapter
 import sample.R
@@ -38,15 +37,19 @@ class HobbiesActivity : AppCompatActivity() {
 
         val url = "https://catfact.ninja/breeds?limit=1"
 
-        val stringRequest = StringRequest(Request.Method.GET, url, Response.Listener<String> {
+        val jsonRequest = JsonObjectRequest(Request.Method.GET,url, null, Response.Listener<JSONObject> {
             Log.i(TAG, "the response was: $it")
+
+            val data = it.getJSONArray("data")
+            val firstCat = data.getJSONObject(0)
+            Log.i(TAG, firstCat.getString("country"))
         }, Response.ErrorListener {
             Log.e(TAG, "That didn't work $it")
         })
 
-        stringRequest.tag = this
+        jsonRequest.tag = this
 
-        queue.addToRequestQueue(stringRequest)
+        queue.addToRequestQueue(jsonRequest)
 
         val adapter = HobbiesAdapter(this, Supplier.hobbies)
         recyclerView.adapter = adapter
