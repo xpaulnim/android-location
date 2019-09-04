@@ -28,4 +28,4 @@ object Supplier {
     )
 }
 
-data class WikiPoi(val title: String, val latitude: Double, val longitude: Double)
+data class WikiPoi(val pageid: Int, val title: String, val latitude: Double, val longitude: Double)

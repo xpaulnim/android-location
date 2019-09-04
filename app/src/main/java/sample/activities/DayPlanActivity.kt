@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSnapHelper
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -19,9 +22,11 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import kotlinx.android.synthetic.main.activity_dayplan.*
+import kotlinx.android.synthetic.main.activity_hobbies.*
 import org.json.JSONObject
 import sample.AppNetwork
 import sample.R
+import sample.adapters.DayPlanAdapter
 import sample.model.WikiPoi
 
 
@@ -35,7 +40,13 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity() {
     private val LAYER_ID = "LAYER_ID"
 
     private val wikiTestUrl =
-        "https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=500&gscoord=51.5144411%7C-0.2018387&format=json&gslimit=50&prop=coordinates|info"
+        "https://en.wikipedia.org/w/api.php?action=query" +
+                "&list=geosearch" +
+                "&gsradius=500" +
+                "&gscoord=51.5144411%7C-0.2018387" +
+                "&format=json" +
+                "&gslimit=50" +
+                "&prop=coordinates|info"
 
     lateinit var queue: AppNetwork
 
@@ -56,27 +67,34 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity() {
     }
 
     private fun getWikiPointsOfInterest() {
-        val jsonRequest = JsonObjectRequest(Request.Method.GET, wikiTestUrl, null, Response.Listener<JSONObject> {
-            Log.i(HobbiesActivity.TAG, "the response was: $it")
+        val jsonRequest =
+            JsonObjectRequest(Request.Method.GET, wikiTestUrl, null, Response.Listener<JSONObject> {
+                Log.i(HobbiesActivity.TAG, "the response was: $it")
 
-            val data = it.getJSONObject("query").getJSONArray("geosearch")
+                val data = it.getJSONObject("query").getJSONArray("geosearch")
 
 
-            for (item in 0 until data.length()-1) {
-                val title = data.getJSONObject(item).getString("title")
-                val lat = data.getJSONObject(item).getDouble("lat")
-                val lng = data.getJSONObject(item).getDouble("lon")
+                for (item in 0 until data.length() - 1) {
+                    val jsonObject = data.getJSONObject(item)
 
-                wikiPoiList.add(WikiPoi(title, lat, lng))
-            }
+                    wikiPoiList.add(
+                        WikiPoi(
+                            jsonObject.getInt("pageid"),
+                            jsonObject.getString("title"),
+                            jsonObject.getDouble("lat"),
+                            jsonObject.getDouble("lon")
+                        )
+                    )
+                }
 
-            Log.i(HobbiesActivity.TAG, wikiPoiList.size.toString())
+                Log.i(HobbiesActivity.TAG, wikiPoiList.size.toString())
 
-            initFeatureCollection()
-            initMarkerIcons(mapboxMap!!.style!!)
-        }, Response.ErrorListener {
-            Log.e(HobbiesActivity.TAG, "That didn't work $it")
-        })
+                initFeatureCollection()
+                initMarkerIcons(mapboxMap!!.style!!)
+                initRecyclerView()
+            }, Response.ErrorListener {
+                Log.e(HobbiesActivity.TAG, "That didn't work $it")
+            })
 
         jsonRequest.tag = this
 
@@ -88,8 +106,6 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity() {
         dayPlanMapView?.getMapAsync { mapboxMap ->
             mapboxMap.setStyle(Style.MAPBOX_STREETS, Style.OnStyleLoaded { style ->
                 getWikiPointsOfInterest()
-
-                initRecyclerView()
 
                 Toast.makeText(this, "Done initializing map", Toast.LENGTH_SHORT).show()
             })
@@ -139,9 +155,13 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity() {
     }
 
     private fun initRecyclerView() {
-//        RecyclerView recyclerView = findViewById(R.id.rv_on_top_of_map)
-//
-//        LocationRecyclerViewAdapter locationAdapter = LocationRecyclerViewAdapter(createRe)
+        val dayPlanAdapter = DayPlanAdapter(wikiPoiList, mapboxMap)
+
+        rvOnTopOfMap.layoutManager = LinearLayoutManager(applicationContext, LinearLayoutManager.HORIZONTAL, true)
+        rvOnTopOfMap.itemAnimator = DefaultItemAnimator()
+        rvOnTopOfMap.adapter = dayPlanAdapter
+
+        LinearSnapHelper().attachToRecyclerView(rvOnTopOfMap)
     }
 
     override fun onStart() {
