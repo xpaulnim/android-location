@@ -53,5 +53,9 @@ class MainActivity : AppCompatActivity() {
         btnGoToDayPlan.setOnClickListener {
             startActivity(Intent(this, DayPlanActivity::class.java))
         }
+
+        btnGoToOpenGL.setOnClickListener {
+            startActivity(Intent(this, OpenGLActivity::class.java))
+        }
     }
 }

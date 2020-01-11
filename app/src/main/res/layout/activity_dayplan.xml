@@ -7,8 +7,7 @@
     <com.mapbox.mapboxsdk.maps.MapView
         android:id="@+id/dayPlanMapView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        mapbox:mapbox_cameraZoom="12"/>
+        android:layout_height="match_parent"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvOnTopOfMap"

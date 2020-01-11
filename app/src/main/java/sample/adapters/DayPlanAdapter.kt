@@ -16,7 +16,6 @@ class DayPlanAdapter(private val poiList: List<WikiPoi>, private val mapboxMap: 
     RecyclerView.Adapter<DayPlanAdapter.MyViewHolder>() {
 
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
         fun setData(poi: WikiPoi?, position: Int) {
             poi?.let {
                 itemView.poiTitleTv.text = poi.title
@@ -27,7 +26,7 @@ class DayPlanAdapter(private val poiList: List<WikiPoi>, private val mapboxMap: 
                 mapboxMap!!.easeCamera(CameraUpdateFactory.newCameraPosition(
                     CameraPosition.Builder()
                         .target(LatLng(poiList[position].latitude, poiList[position].longitude))
-                        .zoom(15.0)
+                        .zoom(17.0)
                         .build()
                 ))
             }
