@@ -10,12 +10,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import sample.R;
-import sample.renderer.OpenGlRenderer;
+import sample.renderer.AirHockeyOpenGlRenderer;
 
-import static sample.ExtensionsKt.showToast;
-
-public class OpenGLActivity extends AppCompatActivity {
+public class AirHockeyOpenGLActivity extends AppCompatActivity {
     private GLSurfaceView glSurfaceView;
     private boolean rendererSet = false;
 
@@ -28,7 +25,7 @@ public class OpenGLActivity extends AppCompatActivity {
         if(supportsEs2()) {
             glSurfaceView.setEGLContextClientVersion(2);
 
-            glSurfaceView.setRenderer(new OpenGlRenderer());
+            glSurfaceView.setRenderer(new AirHockeyOpenGlRenderer(this));
             rendererSet = true;
         } else {
             Toast.makeText(this,

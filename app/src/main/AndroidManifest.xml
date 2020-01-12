@@ -31,7 +31,7 @@
         <activity android:name="sample.activities.LocationActivity" ></activity>
         <activity android:name="sample.activities.UserActivity" ></activity>
         <activity android:name="sample.activities.DayPlanActivity"></activity>
-        <activity android:name="sample.activities.OpenGLActivity" />
+        <activity android:name="sample.activities.AirHockeyOpenGLActivity" />
     </application>
 
 </manifest>
