@@ -57,5 +57,9 @@ class MainActivity : AppCompatActivity() {
         btnGoToOpenGL.setOnClickListener {
             startActivity(Intent(this, AirHockeyOpenGLActivity::class.java))
         }
+
+        btnGoToCamera.setOnClickListener {
+            startActivity(Intent(this, CameraActivity::class.java))
+        }
     }
 }

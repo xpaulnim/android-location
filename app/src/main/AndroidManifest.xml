@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -26,12 +27,13 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="sample.activities.SecondActivity"></activity>
-        <activity android:name="sample.activities.HobbiesActivity"></activity>
-        <activity android:name="sample.activities.LocationActivity" ></activity>
-        <activity android:name="sample.activities.UserActivity" ></activity>
-        <activity android:name="sample.activities.DayPlanActivity"></activity>
+        <activity android:name="sample.activities.SecondActivity" />
+        <activity android:name="sample.activities.HobbiesActivity" />
+        <activity android:name="sample.activities.LocationActivity" />
+        <activity android:name="sample.activities.UserActivity" />
+        <activity android:name="sample.activities.DayPlanActivity" />
         <activity android:name="sample.activities.AirHockeyOpenGLActivity" />
+        <activity android:name="sample.activities.CameraActivity" />
     </application>
 
 </manifest>

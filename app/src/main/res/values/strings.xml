@@ -13,4 +13,6 @@
     <string name="show_users">Show Users</string>
     <string name="show_day_plan">Show day plan</string>
     <string name="show_open_gl">Go to OpenGL</string>
+    <string name="show_camera">Show Camera</string>
+    <string name="camera">Camera</string>
 </resources>

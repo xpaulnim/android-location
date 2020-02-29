@@ -70,7 +70,8 @@ class LocationActivity : OnMapReadyCallback, AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.i(TAG, "Creating location activity: $requestingLocationUpdates")
-        requestingLocationUpdates = savedInstanceState?.getBoolean(REQUESTING_LOCATION_UPDATES_KEY) ?: false
+        requestingLocationUpdates =
+            savedInstanceState?.getBoolean(REQUESTING_LOCATION_UPDATES_KEY) ?: false
 
         super.onCreate(savedInstanceState)
         Mapbox.getInstance(this, getString(R.string.access_token))
@@ -113,17 +114,29 @@ class LocationActivity : OnMapReadyCallback, AppCompatActivity() {
                     val currentLocation = "${location.latitude},${location.longitude}"
 
                     val updatedAt = Calendar.getInstance().getTime()
-                    textView3.text = String.format("%s - %d:%d:%d", currentLocation, updatedAt.hours, updatedAt.minutes, updatedAt.seconds)
+                    textView3.text = String.format(
+                        "%s - %d:%d:%d",
+                        currentLocation,
+                        updatedAt.hours,
+                        updatedAt.minutes,
+                        updatedAt.seconds
+                    )
                     Log.i(TAG, currentLocation)
 
-                    locationViewModel.locations.observe(this@LocationActivity, Observer { locations ->
-                        locations?.let {
-                            routeLocations.addAll(it)
-                        }
-                    })
+                    locationViewModel.locations.observe(
+                        this@LocationActivity,
+                        Observer { locations ->
+                            locations?.let {
+                                routeLocations.addAll(it)
+                            }
+                        })
 
                     locationViewModel.insertLocation(
-                        sample.model.Location(System.currentTimeMillis(), location.latitude, location.longitude)
+                        sample.model.Location(
+                            System.currentTimeMillis(),
+                            location.latitude,
+                            location.longitude
+                        )
                     )
                 }
             }
@@ -232,13 +245,21 @@ class LocationActivity : OnMapReadyCallback, AppCompatActivity() {
 
     private fun startLocationUpdates() {
         if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            val task = fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null)
+            val task = fusedLocationProviderClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                null
+            )
             Log.i(TAG, "${task.isSuccessful}")
 
         } else {
             Log.i(TAG, "Location not yet granted. Requesting location")
 
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            ) {
                 Log.i(TAG, "Requesting current location")
             } else {
                 ActivityCompat.requestPermissions(
@@ -256,7 +277,10 @@ class LocationActivity : OnMapReadyCallback, AppCompatActivity() {
     }
 
     private fun checkPermission(permission: String): Boolean {
-        return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+        return ContextCompat.checkSelfPermission(
+            this,
+            permission
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onStart() {
