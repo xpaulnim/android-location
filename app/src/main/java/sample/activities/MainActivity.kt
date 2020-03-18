@@ -61,5 +61,9 @@ class MainActivity : AppCompatActivity() {
         btnGoToCamera.setOnClickListener {
             startActivity(Intent(this, CameraActivity::class.java))
         }
+
+        btnGoToDrawingCanvas.setOnClickListener {
+            startActivity(Intent(this, DrawingCanvasActivity::class.java))
+        }
     }
 }

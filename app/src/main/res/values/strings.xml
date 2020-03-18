@@ -15,4 +15,5 @@
     <string name="show_open_gl">Go to OpenGL</string>
     <string name="show_camera">Show Camera</string>
     <string name="camera">Camera</string>
+    <string name="show_canvas">Show Canvas</string>
 </resources>

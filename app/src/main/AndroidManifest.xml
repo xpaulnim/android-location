@@ -34,6 +34,7 @@
         <activity android:name="sample.activities.DayPlanActivity" />
         <activity android:name="sample.activities.AirHockeyOpenGLActivity" />
         <activity android:name="sample.activities.CameraActivity" />
+        <activity android:name="sample.activities.DrawingCanvasActivity" />
     </application>
 
 </manifest>
