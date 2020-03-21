@@ -7,11 +7,20 @@
 
     <sample.views.CustomCanvasView
         android:id="@+id/customCanvasView"
-        android:layout_width="200dp"
-        android:layout_height="300dp"
+        android:layout_width="match_parent"
+        android:layout_height="500dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnSaveBitmap"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        />
+
+    <Button
+        android:id="@+id/btnSaveBitmap"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:text="@string/save_bitmap"
+        app:layout_constraintTop_toBottomOf="@id/customCanvasView"
+       />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

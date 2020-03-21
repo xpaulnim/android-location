@@ -16,4 +16,5 @@
     <string name="show_camera">Show Camera</string>
     <string name="camera">Camera</string>
     <string name="show_canvas">Show Canvas</string>
+    <string name="save_bitmap">Save Bitmap</string>
 </resources>
