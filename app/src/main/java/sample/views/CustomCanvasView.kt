@@ -19,23 +19,48 @@ class CustomCanvasView @JvmOverloads constructor(
         val TAG: String = this::class.java.simpleName
     }
 
-    val paint = Paint()
-    val customMatrix = Matrix()
-    val options = BitmapFactory.Options();
+    private val paint = Paint()
+    private val customMatrix = Matrix()
+    private val options = BitmapFactory.Options();
 
-    private val imageBitmap: Bitmap?
+    private var bitmapPath: String? = null
+
+    private var imageBitmap: Bitmap? = null
     private var myCanvas: Canvas? = null
     var drawingBitmap: Bitmap? = null
 
     init {
+        context.theme.obtainStyledAttributes(
+            attrs,
+            R.styleable.CustomCanvasView, 0, 0
+        ).apply {
+            try {
+                bitmapPath = getString(R.styleable.CustomCanvasView_bitmapPath)
+            } finally {
+                recycle()
+            }
+        }
+
         //        options.inJustDecodeBounds = true;
         options.inSampleSize = 1
-        imageBitmap = BitmapFactory.decodeResource(resources, R.drawable.fifty_grand, options)
+
+        if (bitmapPath.isNullOrEmpty()) {
+            imageBitmap = BitmapFactory.decodeResource(resources, R.drawable.fifty_grand, options)
+        }
     }
+
+    fun setBitmapPath(path: String) {
+        bitmapPath = path
+
+        imageBitmap = BitmapFactory.decodeFile(bitmapPath, options)
+
+        invalidate()
+        requestLayout()
+    }
+
 
     var pointX = 300.0f
     var pointY = 300.0f
-    val rect = RectF(10.0f, 10.0f, 50.0f, 20.0f)
     var isHighlighting = false;
 
     var initHighlightPosX: Float = 0.0f
@@ -43,7 +68,6 @@ class CustomCanvasView @JvmOverloads constructor(
 
     var moveHighlightPosX: Float = 0.0f
     var moveHighlightPosY: Float = 0.0f
-
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas);

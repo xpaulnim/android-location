@@ -7,7 +7,7 @@
     <!--    tools:context="CameraActivity">-->
 
     <TextureView
-        android:id="@+id/viewFinder"
+        android:id="@+id/viewFinderTv"
         android:layout_width="640px"
         android:layout_height="640px"
         app:layout_constraintBottom_toBottomOf="parent"

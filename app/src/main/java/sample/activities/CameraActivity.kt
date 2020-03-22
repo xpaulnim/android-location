@@ -1,7 +1,9 @@
 package sample.activities
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Matrix
 import android.os.Bundle
 import android.util.Log
 import android.util.Size
@@ -23,6 +25,8 @@ class CameraActivity : AppCompatActivity() {
     companion object {
         val TAG: String = CameraActivity::class.java.simpleName
 
+        val IMAGE_CAPTURED_INTENT = "image_captured"
+
         // This is an arbitrary number we are using to keep track of the permission
         // request. Where an app has multiple context for requesting permission,
         // this can help differentiate the different contexts.
@@ -32,12 +36,14 @@ class CameraActivity : AppCompatActivity() {
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
     }
 
+    private val executor = Executors.newSingleThreadExecutor()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camerax)
 
         if (allPermissionsGranted()) {
-            viewFinder.post { startCamera() }
+            viewFinderTv.post { startCamera() }
         } else {
             ActivityCompat.requestPermissions(
                 this,
@@ -46,39 +52,38 @@ class CameraActivity : AppCompatActivity() {
             )
         }
 
-        viewFinder.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+        viewFinderTv.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             updateTransform()
         }
     }
 
-    private val executor = Executors.newSingleThreadExecutor()
-
     private fun startCamera() {
-        // Config object for viewfinder use case
-        val previewConfig = PreviewConfig.Builder().apply {
-            setTargetResolution(Size(640, 480))
-        }.build()
-
-        val preview = Preview(previewConfig)
+        val cameraPreview = Preview(
+            PreviewConfig.Builder()
+                .setTargetResolution(Size(640, 640))
+                .build()
+        )
 
         // recompute layout when viewfinder is updated
-        preview.setOnPreviewOutputUpdateListener {
+        cameraPreview.setOnPreviewOutputUpdateListener {
+            // Update surfaceTexture by removing and re-adding viewfinder
+            (viewFinderTv.parent as ViewGroup).let { parent ->
+                parent.removeView(viewFinderTv)
+                parent.addView(viewFinderTv, 0)
+            }
 
-            // Update surfacetexture by removing and re-adding viewfinder
-            val parent = viewFinder.parent as ViewGroup
-            parent.removeView(viewFinder)
-            parent.addView(viewFinder, 0)
-
-            viewFinder.surfaceTexture = it.surfaceTexture
+            viewFinderTv.surfaceTexture = it.surfaceTexture
             updateTransform()
         }
 
-        val imageCaptureConfig = ImageCaptureConfig.Builder()
-            .apply {
-                setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
-            }.build()
+        val imageCapture = ImageCapture(
+            ImageCaptureConfig.Builder()
+                .setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
+                .build()
+        )
 
-        val imageCapture = ImageCapture(imageCaptureConfig)
+        val intent = Intent(this, DrawingCanvasActivity::class.java)
+
         captureButton.setOnClickListener {
             val file = File(externalMediaDirs.first(), "${System.currentTimeMillis()}.jpg")
 
@@ -87,7 +92,10 @@ class CameraActivity : AppCompatActivity() {
                     override fun onImageSaved(file: File) {
                         val msg = "Photo capture succeeded: ${file.absolutePath}"
                         Log.d(TAG, msg)
-                        viewFinder.post {
+
+                        captureButton.post {
+                            intent.putExtra(IMAGE_CAPTURED_INTENT, file.absolutePath)
+                            startActivity(intent)
                             showToast(msg)
                         }
                     }
@@ -99,32 +107,33 @@ class CameraActivity : AppCompatActivity() {
                     ) {
                         val msg = "Photo capture failed: $message"
                         Log.e(TAG, msg, cause)
-                        viewFinder.post {
-                            Toast.makeText(baseContext, msg, Toast.LENGTH_LONG).show()
+
+                        captureButton.post {
+                            showToast(msg)
                         }
                     }
                 })
         }
 
-        CameraX.bindToLifecycle(this, preview, imageCapture)
+        CameraX.bindToLifecycle(this, cameraPreview, imageCapture)
     }
 
     private fun updateTransform() {
-        val matrix = android.graphics.Matrix()
+        val centerX = viewFinderTv.width / 2f
+        val centerY = viewFinderTv.height / 2f
 
-        val centerX = viewFinder.width / 2f
-        val centerY = viewFinder.height / 2f
-
-        val rotationDegrees = when (viewFinder.display.rotation) {
+        val rotationDegrees = when (viewFinderTv.display.rotation) {
             Surface.ROTATION_0 -> 0
             Surface.ROTATION_90 -> 90
             Surface.ROTATION_180 -> 180
             Surface.ROTATION_270 -> 270
             else -> return
         }
+
+        val matrix = Matrix()
         matrix.postRotate(-rotationDegrees.toFloat(), centerX, centerY)
 
-        viewFinder.setTransform((matrix))
+        viewFinderTv.setTransform(matrix)
     }
 
     override fun onRequestPermissionsResult(
@@ -137,7 +146,7 @@ class CameraActivity : AppCompatActivity() {
         when (requestCode) {
             MY_PERMISSION_REQUEST_CAMERA -> {
                 if (allPermissionsGranted()) {
-                    viewFinder.post { startCamera() }
+                    viewFinderTv.post { startCamera() }
                 } else {
                     Toast.makeText(this, "Permissions not granted.", Toast.LENGTH_SHORT).show()
                     finish()

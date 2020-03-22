@@ -13,7 +13,7 @@ class SecondActivity : AppCompatActivity() {
 
         val bundle: Bundle? = intent.extras
         bundle?.let {
-            val message = bundle.getString("user_message")
+            val message = it.getString("user_message")
             showToast(message!!)
 
             textView2.text = message
