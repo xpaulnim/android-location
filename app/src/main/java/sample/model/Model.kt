@@ -8,7 +8,7 @@ data class Hobby(var title: String)
 
 @Entity
 data class User(
-    @PrimaryKey val uid: Int,
+    @PrimaryKey(autoGenerate = true) val uid: Int,
     @ColumnInfo(name = "first_name") var firstName: String?,
     @ColumnInfo(name = "last_name") var lastName: String?
 )

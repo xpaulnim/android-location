@@ -141,8 +141,8 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMap
 
     override fun onMapReady(mapboxMap: MapboxMap) {
         this.mapboxMap = mapboxMap
-        dayPlanMapView?.getMapAsync { mapboxMap ->
-            mapboxMap.setStyle(Style.MAPBOX_STREETS, Style.OnStyleLoaded { style ->
+        dayPlanMapView?.getMapAsync {
+            it.setStyle(Style.MAPBOX_STREETS, Style.OnStyleLoaded { _ ->
                 getLastKnownLocation()
             })
         }

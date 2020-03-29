@@ -1,9 +1,7 @@
 package sample.activities
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
@@ -11,10 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.location.*
-import com.mapbox.geojson.Feature
-import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
@@ -23,17 +19,11 @@ import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 import com.mapbox.mapboxsdk.maps.Style
-import com.mapbox.mapboxsdk.plugins.annotation.*
-import com.mapbox.mapboxsdk.style.layers.LineLayer
-import com.mapbox.mapboxsdk.style.layers.Property
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import com.mapbox.mapboxsdk.plugins.annotation.LineManager
+import com.mapbox.mapboxsdk.plugins.annotation.LineOptions
 import kotlinx.android.synthetic.main.activity_location.*
 import sample.R
-import sample.services.CollectLocationService
 import sample.viewmodels.LocationViewModel
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 class LocationActivity : OnMapReadyCallback, AppCompatActivity() {
@@ -100,7 +90,7 @@ class LocationActivity : OnMapReadyCallback, AppCompatActivity() {
         locationRequest.interval = 120000L
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
-        locationViewModel = ViewModelProviders.of(this).get(LocationViewModel::class.java)
+        locationViewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -113,7 +103,8 @@ class LocationActivity : OnMapReadyCallback, AppCompatActivity() {
                 for (location in locationResult.locations) {
                     val currentLocation = "${location.latitude},${location.longitude}"
 
-                    val updatedAt = Calendar.getInstance().getTime()
+                    val updatedAt = Calendar.getInstance().time
+
                     textView3.text = String.format(
                         "%s - %d:%d:%d",
                         currentLocation,
