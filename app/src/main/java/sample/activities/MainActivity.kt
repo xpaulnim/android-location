@@ -1,69 +1,44 @@
 package sample.activities
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import sample.R
-import sample.showToast
+import sample.fragment.DayPlanFragment
+import sample.fragment.MainNavBtnFragment
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        val TAG = MainActivity::class.java.simpleName
+        private val TAG = MainActivity::class.java.simpleName
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        btnShowToast.setOnClickListener {
-            Log.i(TAG, "Button is Clicked")
-            val message: String = etUserMessage.text.toString()
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
 
-            lblLabel.text = message
-            showToast(message)
-
-            val intent: Intent = Intent(this, SecondActivity::class.java)
-                .putExtra("user_message", message)
-            startActivity(intent)
+        if (currentFragment == null) {
+            supportFragmentManager.beginTransaction()
+                .add(R.id.fragment_container, MainNavBtnFragment())
+                .commit()
         }
 
-        btnImplicitIntent.setOnClickListener {
-            val intent = Intent()
-            intent.action = Intent.ACTION_SEND
-            intent.putExtra(Intent.EXTRA_TEXT, etUserMessage.text.toString())
-            intent.type = "text/plain"
-            startActivity(Intent.createChooser(intent, "Share to: "))
-        }
+        bottom_nav_view.setOnNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.action_map -> {
+                    Log.i(TAG, "$it selected")
 
-        btnShowHobbiesList.setOnClickListener {
-            startActivity(Intent(this, HobbiesActivity::class.java))
-        }
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, DayPlanFragment())
+                        .addToBackStack(null)
+                        .commit()
+                }
+            }
 
-        btnGoToLocationActivity.setOnClickListener {
-            startActivity(Intent(this, LocationActivity::class.java))
-        }
-
-        btnGotoUserActivity.setOnClickListener {
-            startActivity(Intent(this, UserActivity::class.java))
-        }
-
-        btnGoToDayPlan.setOnClickListener {
-            startActivity(Intent(this, DayPlanActivity::class.java))
-        }
-
-        btnGoToOpenGL.setOnClickListener {
-            startActivity(Intent(this, AirHockeyOpenGLActivity::class.java))
-        }
-
-        btnGoToCamera.setOnClickListener {
-            startActivity(Intent(this, CameraActivity::class.java))
-        }
-
-        btnGoToDrawingCanvas.setOnClickListener {
-            startActivity(Intent(this, DrawingCanvasActivity::class.java))
+            true
         }
     }
 }

@@ -1,4 +1,4 @@
-package sample.activities
+package sample.fragment
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -7,10 +7,13 @@ import android.graphics.RectF
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSnapHelper
@@ -32,29 +35,27 @@ import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-import kotlinx.android.synthetic.main.activity_dayplan.*
-import org.json.JSONObject
+import kotlinx.android.synthetic.main.fragment_dayplan.*
 import sample.AppNetwork
 import sample.R
+import sample.activities.LocationActivity
 import sample.adapters.DayPlanAdapter
 import sample.model.WikiPoi
 
-
-class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMapClickListener {
+class DayPlanFragment : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListener {
     companion object {
-        val TAG: String = DayPlanActivity::class.java.simpleName
+        private val TAG: String = DayPlanFragment::class.java.simpleName
         private const val MY_PERMISSION_REQUEST_LOCATION = 1
+
+        private const val SYMBOL_ICON_ID = "SYMBOL_ICON_ID"
+        private const val SOURCE_ID = "SOURCE_ID"
+        private const val LAYER_ID = "LAYER_ID"
     }
 
     private var featureCollection: FeatureCollection? = null
     private var mapboxMap: MapboxMap? = null
 
-
-    private val SYMBOL_ICON_ID = "SYMBOL_ICON_ID"
-    private val SOURCE_ID = "SOURCE_ID"
-    private val LAYER_ID = "LAYER_ID"
-
-    private val wikiTestUrl =
+    private val wikiUrlTemplate =
         "https://en.wikipedia.org/w/api.php?action=query" +
                 "&list=geosearch" +
                 "&gsradius=500" +
@@ -63,85 +64,92 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMap
                 "&gslimit=50" +
                 "&prop=coordinates|info"
 
-    lateinit var queue: AppNetwork
-
     private val wikiPoiList = mutableListOf<WikiPoi>()
+
+    private lateinit var appNetwork: AppNetwork
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
-    var lastKnownLocation: Location? = null
+    private var lastKnownLocation: Location? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        Mapbox.getInstance(activity!!, getString(R.string.access_token))
 
-        queue = AppNetwork.getInstance(this.applicationContext)
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+        return inflater.inflate(R.layout.fragment_dayplan, container, false)
+    }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        Mapbox.getInstance(this, getString(R.string.access_token))
+        day_plan_map_view?.onCreate(savedInstanceState)
+        day_plan_map_view?.getMapAsync(this)
+    }
 
-        setContentView(R.layout.activity_dayplan)
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
 
-        dayPlanMapView?.onCreate(savedInstanceState)
-        dayPlanMapView?.getMapAsync(this)
-
+        appNetwork = AppNetwork.getInstance(activity!!)
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity!!)
     }
 
     private fun getWikiPointsOfInterest(location: Location?) {
-        val finalWikiUrl = wikiTestUrl
+        val finalWikiUrl = wikiUrlTemplate
             .replace("{lat}", location!!.latitude.toString())
             .replace("{lng}", location.longitude.toString())
 
-        val jsonRequest =
-            JsonObjectRequest(
-                Request.Method.GET,
-                finalWikiUrl,
-                null,
-                Response.Listener<JSONObject> {
-                    Log.i(TAG, "the response was: $it")
+        val jsonRequest = JsonObjectRequest(
+            Request.Method.GET,
+            finalWikiUrl,
+            null,
+            Response.Listener {
+                Log.i(TAG, "the response was: $it")
 
-                    val data = it.getJSONObject("query").getJSONArray("geosearch")
+                val data = it.getJSONObject("query").getJSONArray("geosearch")
 
-                    for (item in 0 until data.length() - 1) {
-                        val jsonObject = data.getJSONObject(item)
+                for (item in 0 until data.length() - 1) {
+                    val jsonObject = data.getJSONObject(item)
 
-                        wikiPoiList.add(
-                            WikiPoi(
-                                jsonObject.getInt("pageid"),
-                                jsonObject.getString("title"),
-                                jsonObject.getDouble("lat"),
-                                jsonObject.getDouble("lon")
-                            )
-                        )
-                    }
-
-                    Log.i(TAG, wikiPoiList.size.toString())
-
-                    initFeatureCollection()
-                    initMarkerIcons(mapboxMap!!.style!!)
-                    initRecyclerView()
-
-                    mapboxMap!!.easeCamera(
-                        CameraUpdateFactory.newCameraPosition(
-                            CameraPosition.Builder()
-                                .target(LatLng(wikiPoiList[0].latitude, wikiPoiList[0].longitude))
-                                .zoom(12.0)
-                                .build()
+                    wikiPoiList.add(
+                        WikiPoi(
+                            jsonObject.getInt("pageid"),
+                            jsonObject.getString("title"),
+                            jsonObject.getDouble("lat"),
+                            jsonObject.getDouble("lon")
                         )
                     )
-                },
-                Response.ErrorListener {
-                    Log.e(TAG, "That didn't work $it")
-                })
+                }
+
+                Log.i(TAG, wikiPoiList.size.toString())
+
+                initFeatureCollection()
+                initMarkerIcons(mapboxMap!!.style!!)
+                initRecyclerView()
+
+                mapboxMap!!.easeCamera(
+                    CameraUpdateFactory.newCameraPosition(
+                        CameraPosition.Builder()
+                            .target(LatLng(wikiPoiList[0].latitude, wikiPoiList[0].longitude))
+                            .zoom(12.0)
+                            .build()
+                    )
+                )
+            },
+            Response.ErrorListener {
+                Log.e(TAG, "That didn't work $it")
+            })
 
         jsonRequest.tag = this
 
-        queue.addToRequestQueue(jsonRequest)
+        appNetwork.addToRequestQueue(jsonRequest)
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
         this.mapboxMap = mapboxMap
-        dayPlanMapView?.getMapAsync {
+        day_plan_map_view?.getMapAsync {
             it.setStyle(Style.MAPBOX_STREETS, Style.OnStyleLoaded { _ ->
                 getLastKnownLocation()
             })
@@ -163,21 +171,21 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMap
 
                     Log.i(TAG, wikiPoiList.size.toString())
 
-                    Toast.makeText(this, "Done initializing map", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity!!, "Done initializing map", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
             Log.i(LocationActivity.TAG, "Location not yet granted. Requesting location")
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this,
+                    activity!!,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             ) {
                 Log.i(LocationActivity.TAG, "Requesting current location")
             } else {
                 ActivityCompat.requestPermissions(
-                    this,
+                    activity!!,
                     arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
                     MY_PERMISSION_REQUEST_LOCATION
                 )
@@ -187,7 +195,7 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMap
 
     private fun checkPermission(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(
-            this,
+            activity!!,
             permission
         ) == PackageManager.PERMISSION_GRANTED
     }
@@ -216,7 +224,10 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMap
         Log.i(TAG, "POIs should now be visible")
 
         style.addLayer(
-            SymbolLayer(LAYER_ID, SOURCE_ID).withProperties(
+            SymbolLayer(
+                LAYER_ID,
+                SOURCE_ID
+            ).withProperties(
                 iconImage(SYMBOL_ICON_ID),
                 iconAllowOverlap(true),
                 iconOffset(arrayOf(0f, -4f))
@@ -227,19 +238,25 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMap
     private fun initRecyclerView() {
         val dayPlanAdapter = DayPlanAdapter(wikiPoiList, mapboxMap)
 
-        rvOnTopOfMap.layoutManager =
-            LinearLayoutManager(applicationContext, LinearLayoutManager.HORIZONTAL, false)
-        rvOnTopOfMap.itemAnimator = DefaultItemAnimator()
-        rvOnTopOfMap.adapter = dayPlanAdapter
+        rv_on_top_of_map.layoutManager = LinearLayoutManager(
+            activity!!.applicationContext,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        rv_on_top_of_map.itemAnimator = DefaultItemAnimator()
+        rv_on_top_of_map.adapter = dayPlanAdapter
 
-        LinearSnapHelper().attachToRecyclerView(rvOnTopOfMap)
+        LinearSnapHelper().attachToRecyclerView(rv_on_top_of_map)
     }
 
     override fun onMapClick(point: LatLng): Boolean {
         val pointf = mapboxMap!!.projection.toScreenLocation(point)
         val rectF = RectF(pointf.x - 10, pointf.y - 10, pointf.x + 10, pointf.y + 10)
 
-        val featureList = mapboxMap!!.queryRenderedFeatures(rectF, LAYER_ID)
+        val featureList = mapboxMap!!.queryRenderedFeatures(
+            rectF,
+            LAYER_ID
+        )
         Log.i(TAG, "You clicked on " + featureList.size.toString())
 
         if (featureList.size > 0) {
@@ -256,7 +273,7 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMap
 
             for (i in 1..wikiPoiList.size) {
                 if (wikiPoiList[i].pageid.toString() == featureList[0].id()) {
-                    rvOnTopOfMap.layoutManager!!.scrollToPosition(i)
+                    rv_on_top_of_map.layoutManager!!.scrollToPosition(i)
                     break
                 }
             }
@@ -273,22 +290,22 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMap
 
     override fun onStart() {
         super.onStart()
-        dayPlanMapView?.onStart()
+        day_plan_map_view?.onStart()
     }
 
     override fun onStop() {
         super.onStop()
-        dayPlanMapView?.onStop()
+        day_plan_map_view?.onStop()
     }
 
-    public override fun onPause() {
+    override fun onPause() {
         super.onPause()
-        dayPlanMapView?.onPause()
+        day_plan_map_view?.onPause()
     }
 
     override fun onLowMemory() {
         super.onLowMemory()
-        dayPlanMapView?.onLowMemory()
+        day_plan_map_view?.onLowMemory()
     }
 
     override fun onDestroy() {
@@ -296,7 +313,6 @@ class DayPlanActivity : OnMapReadyCallback, AppCompatActivity(), MapboxMap.OnMap
         if (mapboxMap != null) {
             mapboxMap!!.removeOnMapClickListener(this);
         }
-        dayPlanMapView.onDestroy();
-        dayPlanMapView?.onDestroy()
+        day_plan_map_view?.onDestroy();
     }
 }

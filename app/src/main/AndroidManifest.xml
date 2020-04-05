@@ -31,7 +31,6 @@
         <activity android:name="sample.activities.HobbiesActivity" />
         <activity android:name="sample.activities.LocationActivity" />
         <activity android:name="sample.activities.UserActivity" />
-        <activity android:name="sample.activities.DayPlanActivity" />
         <activity android:name="sample.activities.AirHockeyOpenGLActivity" />
         <activity android:name="sample.activities.CameraActivity" />
         <activity android:name="sample.activities.DrawingCanvasActivity" />
