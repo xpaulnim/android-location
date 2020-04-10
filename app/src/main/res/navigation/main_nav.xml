@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/main_nav"
+    app:startDestination="@id/action_map">
+
+    <fragment
+        android:id="@+id/action_map"
+        android:name="sample.fragment.DayPlanFragment"
+        android:label="@string/menu_map" />
+    <fragment
+        android:id="@+id/action_home"
+        android:name="sample.fragment.MainNavBtnFragment"
+        android:label="@string/menu_home" />
+</navigation>

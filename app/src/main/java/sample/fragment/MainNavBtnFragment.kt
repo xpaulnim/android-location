@@ -23,6 +23,8 @@ class MainNavBtnFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
+
         return inflater.inflate(R.layout.fragment_main_nav_buttons, container, false)
     }
 

@@ -25,4 +25,5 @@
     <string name="menu_navigation">Nav</string>
     <string name="menu_map">Map</string>
     <string name="menu_library">Your Library</string>
+    <string name="menu_home">Home</string>
 </resources>

@@ -3,6 +3,9 @@ package sample.activities
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.findNavController
+import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
 import sample.R
 import sample.fragment.DayPlanFragment
@@ -18,27 +21,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
-
-        if (currentFragment == null) {
-            supportFragmentManager.beginTransaction()
-                .add(R.id.fragment_container, MainNavBtnFragment())
-                .commit()
-        }
-
-        bottom_nav_view.setOnNavigationItemSelectedListener {
-            when (it.itemId) {
-                R.id.action_map -> {
-                    Log.i(TAG, "$it selected")
-
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, DayPlanFragment())
-                        .addToBackStack(null)
-                        .commit()
-                }
-            }
-
-            true
-        }
+        val navController = findNavController(R.id.nav_host_fragment)
+        findViewById<BottomNavigationView>(R.id.bottom_nav_view)
+            .setupWithNavController(navController)
     }
 }
